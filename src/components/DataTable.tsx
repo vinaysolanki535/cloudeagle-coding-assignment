@@ -81,7 +81,7 @@ const DataTable: React.FC<DataTableProps> = ({ columns }) => {
     [dispatch]
   );
   const handleCellChange = useCallback(
-    (key: keyof DataRecord, value: any) =>
+    (key: keyof DataRecord, value: DataRecord[keyof DataRecord]) =>
       dispatch({
         type: ActionType.UPDATE_EDITING_ROW,
         payload: { [key]: value },
