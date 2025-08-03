@@ -1,5 +1,14 @@
 import React, { useMemo, useRef, useCallback, useEffect } from "react";
-import { Paper, Box, TableSortLabel, TextField, Button } from "@mui/material";
+import {
+  Paper,
+  Box,
+  TableSortLabel,
+  TextField,
+  Button,
+  Switch,
+  FormControlLabel,
+  TablePagination,
+} from "@mui/material";
 import { VariableSizeList as List } from "react-window";
 import { useTableContext } from "../context/TableContext";
 import { useVirtualTable } from "../hooks/useVirtualTable";
@@ -7,12 +16,12 @@ import { TableRow } from "./TableRow";
 import { CSVLink } from "react-csv";
 import type { DataRecord } from "../utils/interface";
 import type { DataTableProps } from "./interface";
-import { ActionType } from "../context/interface";
+import { ActionType, TableViewMode } from "../context/interface";
 
 const DataTable: React.FC<DataTableProps> = ({ columns }) => {
   const { state, dispatch } = useTableContext();
   const { sortedData } = useVirtualTable();
-  const { sortConfig, filters, editingRow } = state;
+  const { sortConfig, filters, editingRow, viewMode, pagination } = state;
 
   const listRef = useRef<List>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -107,6 +116,13 @@ const DataTable: React.FC<DataTableProps> = ({ columns }) => {
     ]
   );
 
+  // pagination logic
+  const paginatedData = useMemo(() => {
+    const start = pagination.page * pagination.pageSize;
+    const end = start + pagination.pageSize;
+    return sortedData.slice(start, end);
+  }, [sortedData, pagination]);
+
   return (
     <Paper
       sx={{
@@ -116,19 +132,38 @@ const DataTable: React.FC<DataTableProps> = ({ columns }) => {
         border: "1px solid #e0e0e0",
       }}
     >
-      <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-        <CSVLink
-          data={sortedData}
-          headers={csvHeaders}
-          filename={"cloudeagle_data_export.csv"}
-          style={{ textDecoration: "none" }}
-          target="_blank"
-        >
-          <Button variant="contained">Export to CSV</Button>
-        </CSVLink>
-        <Button variant="outlined" onClick={clearFilters}>
-          Clear Filters
-        </Button>
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Switch
+              checked={viewMode === TableViewMode.VIRTUAL}
+              onChange={() => dispatch({ type: ActionType.TOGGLE_VIEW_MODE })}
+            />
+          }
+          label="Virtual Scroll"
+        />
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <CSVLink
+            data={sortedData}
+            headers={csvHeaders}
+            filename={"cloudeagle_data_export.csv"}
+            style={{ textDecoration: "none" }}
+            target="_blank"
+          >
+            <Button variant="contained">Export to CSV</Button>
+          </CSVLink>
+          <Button variant="outlined" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </Box>
       </Box>
       <div
         ref={headerRef}
@@ -187,20 +222,57 @@ const DataTable: React.FC<DataTableProps> = ({ columns }) => {
       </div>
       <div
         className="overflow-auto"
-        style={{ height: 500 }}
+        style={{ height: 530 }}
         onScroll={handleBodyScroll}
       >
-        <List
-          ref={listRef}
-          height={500}
-          itemCount={sortedData.length}
-          itemSize={() => 54}
-          width={totalColumnWidth}
-          itemData={itemData}
-        >
-          {TableRow}
-        </List>
+        {viewMode === TableViewMode.VIRTUAL ? (
+          <List
+            ref={listRef}
+            height={530}
+            itemCount={sortedData.length}
+            itemSize={() => 54}
+            width={totalColumnWidth}
+            itemData={itemData}
+          >
+            {TableRow}
+          </List>
+        ) : (
+          <div style={{ width: totalColumnWidth }}>
+            {paginatedData?.map((record, index) => {
+              const paginatedItemData = { ...itemData, rows: paginatedData };
+              return (
+                <TableRow
+                  key={record.key}
+                  index={index}
+                  style={{}}
+                  data={paginatedItemData}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
+      {viewMode === TableViewMode.PAGINATED && (
+        <TablePagination
+          rowsPerPageOptions={[50, 100, 200]}
+          component="div"
+          count={sortedData.length}
+          rowsPerPage={pagination.pageSize}
+          page={pagination.page}
+          onPageChange={(_, newPage) =>
+            dispatch({
+              type: ActionType.SET_PAGINATION,
+              payload: { ...pagination, page: newPage },
+            })
+          }
+          onRowsPerPageChange={(e) =>
+            dispatch({
+              type: ActionType.SET_PAGINATION,
+              payload: { page: 0, pageSize: parseInt(e.target.value, 10) },
+            })
+          }
+        />
+      )}
     </Paper>
   );
 };

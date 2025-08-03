@@ -5,7 +5,7 @@ import React, {
   type ReactNode,
 } from "react";
 import type { DataRecord } from "../utils/interface";
-import { ActionType, type TableState } from "./interface";
+import { ActionType, TableViewMode, type TableState } from "./interface";
 import type { Action } from "./types";
 
 const createInitialState = (initialData: DataRecord[]): TableState => ({
@@ -13,6 +13,8 @@ const createInitialState = (initialData: DataRecord[]): TableState => ({
   sortConfig: null,
   filters: {},
   editingRow: null,
+  viewMode: TableViewMode.VIRTUAL,
+  pagination: { page: 0, pageSize: 50 },
 });
 
 const tableReducer = (state: TableState, action: Action): TableState => {
@@ -64,6 +66,16 @@ const tableReducer = (state: TableState, action: Action): TableState => {
       }
       return { ...state, data: newData, editingRow: null };
     }
+    case "TOGGLE_VIEW_MODE":
+      return {
+        ...state,
+        viewMode:
+          state.viewMode === TableViewMode.VIRTUAL
+            ? TableViewMode.PAGINATED
+            : TableViewMode.VIRTUAL,
+      };
+    case "SET_PAGINATION":
+      return { ...state, pagination: action.payload };
     default:
       return state;
   }

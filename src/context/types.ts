@@ -17,6 +17,11 @@ export type Action =
   | { type: ActionType.START_EDIT; payload: DataRecord }
   | { type: ActionType.UPDATE_EDITING_ROW; payload: Partial<EditingDataRecord> }
   | { type: ActionType.CANCEL_EDIT }
-  | { type: ActionType.SAVE_EDIT };
+  | { type: ActionType.SAVE_EDIT }
+  | { type: ActionType.TOGGLE_VIEW_MODE }
+  | {
+      type: ActionType.SET_PAGINATION;
+      payload: { page: number; pageSize: number };
+    };
 
 export type { EditingDataRecord };
