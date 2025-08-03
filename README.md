@@ -87,7 +87,7 @@ This application includes a comprehensive set of features designed for a modern 
 2.  **Clone the repository:**
 
     ```bash
-    git clone [https://github.com/vinaysolanki535/cloudeagle-coding-assignment](https://github.com/vinaysolanki535/cloudeagle-coding-assignment)
+    git clone https://github.com/vinaysolanki535/cloudeagle-coding-assignment
     ```
 
 3.  **Navigate to the project directory:**
